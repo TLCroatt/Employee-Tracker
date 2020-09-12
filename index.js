@@ -39,8 +39,8 @@ function start() {
     .then(function(answer) {
          if (answer.action === "View Employees") {
              viewEmployees();
-         } else if (answer.action === "View Department") {
-             viewDepartment();
+         } else if (answer.action === "View Departments") {
+             viewDepartments();
          } else if (answer.action === "View Roles") {
              viewRoles();
          } else if (answer.action === "Add Employee") {
@@ -58,7 +58,7 @@ function start() {
 };
 
 function viewEmployees() {
-    const query = "SELECT * FROM employee";
+    var query = "SELECT * FROM employee";
         connection.query(query, function(err, res) {
             console.log(`EMPLOYEES:`)
         res.forEach(employee => {
@@ -67,3 +67,26 @@ function viewEmployees() {
         start();    
     });
 };
+
+function viewDepartments() {
+    var query = "SELECT * FROM department";
+        connection.query(query, function(err, res) {
+            console.log(`DEPARTMENTS:`)
+        res.forEach(department => {
+            console.log (`ID: ${department.id} | Name: ${department.name}`)
+        });    
+    });
+    start();
+};    
+
+function viewRoles() {
+    var query = "SELECT * FROM role";
+    connection.query(query, function(err, res) {
+        console.log(`ROLES:`)
+    res.forEach(role => {
+        console.log(`ID: ${role.id} | Title: ${role.title} | Salary: ${role.salary} | Department ID: ${role.department_id}`);
+    })
+    start();
+    });
+};
+
