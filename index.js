@@ -1,6 +1,7 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
 const { allowedNodeEnvironmentFlags } = require("process");
+const consoleTable = require("console.table");
 
 //connection to mysql database
 var connection = mysql.createConnection({
@@ -27,7 +28,7 @@ function start() {
             message: "What would you like to do?",
             choices: [
                 "View Employees",
-                "View Department",
+                "View Departments",
                 "View Roles",
                 "Add Employee",
                 "Add Department",
@@ -36,57 +37,102 @@ function start() {
                 "End"
             ]
         })
-    .then(function(answer) {
-         if (answer.action === "View Employees") {
-             viewEmployees();
-         } else if (answer.action === "View Departments") {
-             viewDepartments();
-         } else if (answer.action === "View Roles") {
-             viewRoles();
-         } else if (answer.action === "Add Employee") {
-             addEmployee();
-         } else if (answer.action === "Add Department") {
-             addDepartment();
-         } else if (answer.action === "Add Role") {
-             addRole(); 
-         } else if (answer.action === "Update Employee Role") {
-             updateRole();
-         } else if (answer.action === "Exit") {
-             connection.end();
-         }
+    .then(function({task}) {
+         switch (task) {
+            case "View Employees":
+                viewEmployees();
+                break;
+            case "View Departments":
+                viewDepartments();
+                break;
+            case "View Roles":
+                viewRoles();
+                break;
+            case "Add Employee":
+                addEmployee();  
+                break;
+            case "Add Department":
+                addDepartment();
+                break;
+            case "Add Role":
+                addRole();
+                break;
+            case "Update Employee Role":
+                updateRole();
+                break;
+            case "End":
+                connection.end();
+                break;           
+        }
     });    
 };
 
-function viewEmployees() {
-    var query = "SELECT * FROM employee";
-        connection.query(query, function(err, res) {
-            console.log(`EMPLOYEES:`)
-        res.forEach(employee => {
-            console.log(`ID: ${employee.id} | Name: ${employee.first_name} ${employee.last_name} | Role ID: ${employee.role_id} | Manager ID: ${employee.manager_id}`);
-        });
+async function viewEmployees() {
+    var query = `SELECT e.id, e.first_name, e.last_name, r.title, d.name, r.salary, CONCAT(m.first_name, ' ', m.last_name)
+    FROM EMPLOYEE AS e
+    LEFT JOIN role AS r
+        ON e.role_id = r.id
+    LEFT JOIN department AS d
+        ON d.id = r.department_id
+    LEFT JOIN employee AS m
+        ON m.id = e.manager_id;` 
+    
+    connection.query(query, function(err, res) {
+        if (err) throw err
+        console.log(`EMPLOYEES:`)
+        console.table(res);
         start();    
     });
 };
 
-function viewDepartments() {
-    var query = "SELECT * FROM department";
-        connection.query(query, function(err, res) {
-            console.log(`DEPARTMENTS:`)
-        res.forEach(department => {
-            console.log (`ID: ${department.id} | Name: ${department.name}`)
-        });    
-    });
-    start();
-};    
-
-function viewRoles() {
-    var query = "SELECT * FROM role";
+async function viewDepartments() {
+    var query = `SELECT * FROM department`
+    
     connection.query(query, function(err, res) {
-        console.log(`ROLES:`)
-    res.forEach(role => {
-        console.log(`ID: ${role.id} | Title: ${role.title} | Salary: ${role.salary} | Department ID: ${role.department_id}`);
-    })
-    start();
+        if (err) throw err
+        console.log("DEPARTMENTS:")
+        console.table(res)
+        departmentPrompts();
     });
-};
+
+     //var departmentChoice = res.map(data => ({
+       //value: data.id, name: data.name
+      //}));
+
+   // departmentPrompts();
+
+    function departmentPrompts() {
+        inquirer
+            .prompt([
+                {
+                    type: "list",
+                    name: "departmentID",
+                    message: "Select a department.",
+                    choices: ["1", "2", "3", "4"]
+                }
+            ])
+            .then(function (answer) {
+                console.log("answer", answer.departmentID)
+
+                var query = `SELECT e.id, e.first_name, e.last_name, r.title, d.name AS department
+                FROM employee AS e
+                LEFT JOIN role AS r
+                    ON e.role_id = r.id
+                LEFT JOIN department AS d
+                    ON d.id = r.department_id
+                WHERE d.id = ?`
+
+                connection.query(query, answer.departmentID, function (err, res) {
+                    if (err) throw err;
+
+                    console.log(`Employess in ${answer.departmentID}`)
+                    console.table(res);
+                })
+            });
+    
+    
+        }; 
+        
+    start(); 
+    };      
 
