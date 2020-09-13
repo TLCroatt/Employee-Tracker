@@ -2,6 +2,7 @@ const mysql = require("mysql");
 const inquirer = require("inquirer");
 const { allowedNodeEnvironmentFlags } = require("process");
 const consoleTable = require("console.table");
+const { identity } = require("rxjs");
 
 //connection to mysql database
 var connection = mysql.createConnection({
@@ -95,12 +96,6 @@ async function viewDepartments() {
         departmentPrompts();
     });
 
-     //var departmentChoice = res.map(data => ({
-       //value: data.id, name: data.name
-      //}));
-
-   // departmentPrompts();
-
     function departmentPrompts() {
         inquirer
             .prompt([
@@ -127,12 +122,59 @@ async function viewDepartments() {
 
                     console.log(`Employess in ${answer.departmentID}`)
                     console.table(res);
+                    start();
                 })
             });
     
     
         }; 
         
-    start(); 
+     
     };      
 
+
+async function viewRoles() {
+    var query = `SELECT * FROM role`
+    
+    connection.query(query, function(err, res) {
+        if (err) throw err
+        console.log("ROLES:")
+        console.table(res)
+    });
+    start();
+};       
+
+async function addEmployee() {
+    inquirer
+        .prompt([
+            {
+                type: "input",
+                name: "firstName",
+                message: "What is the employee's first name?"
+            },
+            {
+                type: "input",
+                name: "lastName",
+                message: "What is the employee's last name?"
+            },
+            {
+                type: "number",
+                name: "roleID",
+                message: "What is their role ID?"
+            },
+            {
+                type: "number",
+                name: "managerID",
+                message: "What is their manager's ID?"
+            }
+        ])
+        .then(function(res) {
+            connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`, [res.firstName, res.lastName, res.roleID, res.managerID], function(err, data) {
+                if (err) throw err;
+                console.table("Employee Added")
+                start();
+            })
+        })
+    
+    
+}
