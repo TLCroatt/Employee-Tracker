@@ -140,8 +140,9 @@ async function viewRoles() {
         if (err) throw err
         console.log("ROLES:")
         console.table(res)
+        start();
     });
-    start();
+    
 };       
 
 async function addEmployee() {
@@ -171,10 +172,75 @@ async function addEmployee() {
         .then(function(res) {
             connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`, [res.firstName, res.lastName, res.roleID, res.managerID], function(err, data) {
                 if (err) throw err;
-                console.table("Employee Added")
+                console.table("Employee Added", res)
                 start();
             })
         })
     
     
+};
+
+async function addDepartment() {
+    inquirer
+        .prompt([
+            {
+                type: "input",
+                name: "department",
+                message: "What department would you like to add?"
+            }
+        ]).then(function(res) {
+            connection.query(`INSERT INTO department (name) VALUES (?)`, [res.department], function(err, data) {
+                if (err) throw err;
+                console.log("Department Added");
+                start();
+            })
+        })
+};
+
+async function addRole() {
+    inquirer
+        .prompt([
+            {
+                type: "input",
+                name: "title",
+                message: "Enter Job Title"
+            },
+            {
+                type: "number",
+                name: "salary",
+                message: "Enter Salary"
+            },
+            {
+                type: "number",
+                name: "departmentID",
+                message: "Enter Department ID Number"
+            }
+        ]).then(function(res) {
+            connection.query(`INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`, [res.title, res.salary, res.departmentID], function (err, res) {
+                console.log("Position Added");
+                start();
+            })
+            
+        })
+};
+
+async function updateRole() {
+    inquirer
+        .prompt([
+            {
+                type: "input",
+                name: "name",
+                message: "Please enter the last name of the employee you wish to update."
+            },
+            {
+                type: "number",
+                name: "roleID",
+                message: "Please enter the new role ID"
+            }
+        ]).then(function(res) {
+            connection.query(`UPDATE employee SET role_id = ? WHERE last_name = ?`, [res.roleID, res.name], function(err, data) {
+                console.log("Employee Updated");
+                start();
+            })
+        })
 }
